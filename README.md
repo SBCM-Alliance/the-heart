@@ -28,15 +28,15 @@
 
 ```mermaid
 graph TD
-    Leviathan[<b>Leviathan</b><br>(国家・行政)] -->|予算執行| Valve{<b>G-Cart Valve</b><br>(歪み検知)}
+    Leviathan["<b>Leviathan</b><br>(国家・行政)"] -->|予算執行| Valve{"<b>G-Cart Valve</b><br>(歪み検知)"}
     
-    Valve -- 歪み > 10.0 -->|遮断 & 徴収| Heart((<b>The Heart</b><br>Liquidity Pool))
-    Valve -- 正常 -->|承認| Tokyo[<b>Tokyo</b><br>(Predator Block)]
+    Valve -- "歪み > 10.0" -->|遮断 & 徴収| Heart(("<b>The Heart</b><br>Liquidity Pool"))
+    Valve -- 正常 -->|承認| Tokyo["<b>Tokyo</b><br>(Predator Block)"]
     
-    Heart -->|Systole (収縮)| Target{<b>Triage Logic</b><br>(生存判定)}
+    Heart -->|"Systole (収縮)"| Target{"<b>Triage Logic</b><br>(生存判定)"}
     
-    Target -- 瀕死 (HP < 30%) -->|輸血 (Special Quest)| Yubari[<b>Yubari</b><br>(Dying Block)]
-    Target -- 瀕死 -->|輸血| Akita[<b>Akita</b><br>(Dying Block)]
+    Target -- "瀕死 (HP < 30%)" -->|"輸血 (Special Quest)"| Yubari["<b>Yubari</b><br>(Dying Block)"]
+    Target -- 瀕死 -->|輸血| Akita["<b>Akita</b><br>(Dying Block)"]
     
     style Heart fill:#ff4b4b,stroke:#333,stroke-width:4px,color:white
     style Leviathan fill:#333,stroke:#fff,color:white
