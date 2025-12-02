@@ -3,36 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Heart | Visual Dashboard</title>
+    <title>The Heart | Global Liquidity Protocol</title>
     
+    <!-- PyScript 2024.1.1 -->
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
     <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
 
     <style>
-        /* --- Cyberpunk UI Styles --- */
+        /* --- Cyberpunk UI --- */
         body {
             background-color: #050505;
             color: #e0e0e0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', monospace;
             margin: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        h1 { color: #ff4b4b; margin: 0; font-size: 1.5rem; letter-spacing: 2px; }
+        h1 { color: #ff4b4b; margin: 0; letter-spacing: 3px; text-shadow: 0 0 10px #ff4b4b; }
         .subtitle { color: #666; font-size: 0.8rem; margin-bottom: 20px; }
 
-        /* --- Layout --- */
-        .container {
-            width: 100%;
-            max-width: 600px;
-            position: relative;
-        }
-
-        /* --- Top: HQ (The Heart) --- */
+        /* --- HQ (The Heart) --- */
         .hq-container {
             display: flex;
             flex-direction: column;
@@ -43,297 +38,354 @@
         }
 
         .heart-icon {
-            font-size: 3rem;
+            font-size: 4rem;
             animation: heartbeat 1.5s infinite;
             cursor: pointer;
-            z-index: 2;
+            z-index: 20;
         }
 
         .pool-display {
-            background: #1a1a1a;
+            background: #111;
             border: 1px solid #ff4b4b;
-            padding: 5px 15px;
-            border-radius: 15px;
-            margin-top: 10px;
-            font-family: monospace;
+            padding: 8px 24px;
+            border-radius: 20px;
+            margin-top: -10px;
             font-size: 1.2rem;
             color: #ff4b4b;
-            box-shadow: 0 0 10px rgba(255, 75, 75, 0.3);
+            box-shadow: 0 0 15px rgba(255, 75, 75, 0.2);
+            font-family: monospace;
+            z-index: 21;
         }
 
-        /* --- Bottom: Blocks --- */
-        .blocks-container {
+        /* --- Blocks Layout --- */
+        .blocks-wrapper {
             display: flex;
-            justify-content: space-between;
-            gap: 10px;
+            justify-content: center;
+            gap: 12px;
             width: 100%;
+            max-width: 800px;
+            flex-wrap: nowrap; /* 横並び強制 */
         }
 
         .block-card {
-            background: #111;
+            background: #0a0a0a;
             border: 1px solid #333;
             border-radius: 8px;
             padding: 10px;
-            width: 30%;
+            flex: 1;
             text-align: center;
             position: relative;
             transition: all 0.3s;
-            cursor: pointer;
+            min-width: 60px;
         }
 
-        .block-card:hover { transform: translateY(-5px); border-color: #666; }
-        .block-card.critical { border-color: #ff4b4b; box-shadow: 0 0 15px rgba(255, 0, 0, 0.2); }
+        .block-card.predator { border-color: #d600ff; box-shadow: 0 0 10px rgba(214, 0, 255, 0.2); }
+        .block-card.critical { border-color: #ff0000; box-shadow: 0 0 15px rgba(255, 0, 0, 0.4); animation: shake 0.5s infinite; }
 
-        .block-name { font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; }
-        .block-vitality-bar {
-            height: 100px;
-            background: #222;
-            width: 20px;
+        .block-name { font-size: 0.75rem; font-weight: bold; margin-bottom: 10px; white-space: nowrap; }
+        
+        .vitality-track {
+            height: 120px;
+            background: #1a1a1a;
+            width: 14px;
             margin: 0 auto;
             position: relative;
             border-radius: 10px;
+            border: 1px solid #333;
             overflow: hidden;
-            border: 1px solid #444;
         }
 
         .vitality-fill {
-            background: linear-gradient(to top, #4b91ff, #00d2ff);
             width: 100%;
             position: absolute;
             bottom: 0;
-            transition: height 0.5s ease-out;
+            transition: height 0.3s ease-out, background-color 0.3s;
         }
-        
-        .block-card.critical .vitality-fill { background: linear-gradient(to top, #550000, #ff0000); }
 
-        .block-stats { font-size: 0.7rem; color: #888; margin-top: 5px; font-family: monospace; }
+        .block-stats { font-size: 0.7rem; color: #888; margin-top: 8px; font-family: monospace; }
+
+        /* --- Controls --- */
+        .controls { margin-top: 40px; display: flex; gap: 20px; }
+        .btn {
+            background: #222; border: 1px solid #444; color: white;
+            padding: 12px 24px; cursor: pointer; border-radius: 4px;
+            font-weight: bold; font-size: 1rem;
+            transition: all 0.1s;
+        }
+        .btn:hover { background: #333; }
+        .btn:active { transform: scale(0.95); }
+        .btn-primary { 
+            background: linear-gradient(45deg, #ff4b4b, #ff0000); 
+            border: none; 
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+        }
+
+        /* --- Log --- */
+        #log-area {
+            margin-top: 30px;
+            height: 120px;
+            width: 90%;
+            max-width: 600px;
+            overflow-y: auto;
+            font-size: 0.7rem;
+            color: #555;
+            border-top: 1px solid #222;
+            padding-top: 10px;
+            font-family: monospace;
+        }
+        .log-entry { margin-bottom: 2px; }
+        .c-purple { color: #d600ff; } /* 搾取色 */
+        .c-gold { color: #ffd700; }   /* 徴収色 */
+        .c-red { color: #ff4b4b; }    /* 救済色 */
 
         /* --- Animations --- */
         @keyframes heartbeat {
             0% { transform: scale(1); }
-            50% { transform: scale(1.1); text-shadow: 0 0 20px red; }
+            10% { transform: scale(1.1); }
+            20% { transform: scale(1); }
             100% { transform: scale(1); }
         }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(1px); }
+            75% { transform: translateX(-1px); }
+            100% { transform: translateX(0); }
+        }
 
-        .flow-particle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #ff4b4b;
+        /* Particles */
+        .particle {
+            position: fixed; /* absoluteだと親の影響を受けるのでfixed推奨 */
+            width: 10px; height: 10px;
             border-radius: 50%;
-            box-shadow: 0 0 10px #ff4b4b;
             pointer-events: none;
-            z-index: 100;
-            transition: top 1s ease-in, left 1s ease-in;
+            z-index: 9999;
+            transition: top 0.8s ease-in-out, left 0.8s ease-in-out;
         }
-
-        /* Log Area */
-        #log-area {
-            margin-top: 30px;
-            height: 150px;
-            overflow-y: auto;
-            font-size: 0.7rem;
-            color: #666;
-            border-top: 1px solid #333;
-            padding-top: 10px;
-            width: 100%;
-            font-family: monospace;
-        }
-        
-        .log-entry { margin-bottom: 2px; }
-        .log-red { color: #ff4b4b; }
-        .log-gold { color: #ffd700; }
-
-        /* Buttons */
-        .controls { margin-top: 20px; display: flex; gap: 10px; }
-        .btn {
-            background: #333; border: 1px solid #555; color: white;
-            padding: 8px 16px; cursor: pointer; border-radius: 4px;
-        }
-        .btn:hover { background: #444; }
-        .btn-primary { background: #ff4b4b; border-color: #ff4b4b; }
-        .btn-primary:hover { background: #d43f3f; }
-
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>🫀 The Heart</h1>
-        <div class="subtitle">"From Logic to the Heart."</div>
+        <div class="subtitle">"Correcting the Straw Effect."</div>
 
-        <!-- HQ Area -->
-        <div class="hq-container" id="hq">
+        <!-- HQ -->
+        <div class="hq-container">
             <div class="heart-icon" id="heart-btn">🫀</div>
             <div class="pool-display" id="pool-val">Pool: ¥0</div>
         </div>
 
-        <!-- Blocks Area -->
-        <div class="blocks-container" id="blocks-area">
-            <div class="block-card" id="block-0" py-click="manual_transfusion(0)">
-                <div class="block-name">Tokyo</div>
-                <div class="block-vitality-bar"><div class="vitality-fill" id="fill-0" style="height: 95%;"></div></div>
-                <div class="block-stats" id="stats-0">HP: 95%</div>
-            </div>
-            <div class="block-card" id="block-1" py-click="manual_transfusion(1)">
-                <div class="block-name">Osaka</div>
-                <div class="block-vitality-bar"><div class="vitality-fill" id="fill-1" style="height: 70%;"></div></div>
-                <div class="block-stats" id="stats-1">HP: 70%</div>
-            </div>
-            <div class="block-card critical" id="block-2" py-click="manual_transfusion(2)">
-                <div class="block-name">Yubari</div>
-                <div class="block-vitality-bar"><div class="vitality-fill" id="fill-2" style="height: 15%;"></div></div>
-                <div class="block-stats" id="stats-2">HP: 15%</div>
-            </div>
+        <!-- Blocks -->
+        <div class="blocks-wrapper" id="blocks-area">
+            <!-- Generated by Python -->
         </div>
 
         <!-- Controls -->
         <div class="controls">
-            <button class="btn btn-primary" py-click="run_cycle">⚡ Run Cycle (G-Cart)</button>
-            <button class="btn" py-click="reset_system">Reset</button>
+            <button class="btn btn-primary" py-click="trigger_gcart">⚡ Run G-Cart (Optimize)</button>
+            <button class="btn" py-click="toggle_decay">⏸️ Pause</button>
         </div>
 
-        <div id="log-area">System Ready... Tap specific block to inject funds manually.</div>
+        <!-- Log -->
+        <div id="log-area">System Booted. Watching wealth distribution...</div>
     </div>
 
     <!-- Python Logic -->
     <script type="py">
         import js
-        import random
         import asyncio
+        import random
+        from pyodide.ffi import create_proxy
 
-        # --- System State ---
+        # --- Initial Data ---
+        # Tokyo: Predator (吸う側)
+        # Others: Prey (吸われる側)
+        blocks_data = [
+            {"name": "Tokyo",   "hp": 1.00, "type": "predator", "color": "#d600ff"},
+            {"name": "Osaka",   "hp": 0.80, "type": "neutral",  "color": "#4b91ff"},
+            {"name": "Sendai",  "hp": 0.60, "type": "prey",     "color": "#4b91ff"},
+            {"name": "Akita",   "hp": 0.40, "type": "prey",     "color": "#4b91ff"},
+            {"name": "Tottori", "hp": 0.20, "type": "prey",     "color": "#4b91ff"},
+        ]
+
         state = {
             "pool": 0,
-            "blocks": [
-                {"name": "Tokyo", "hp": 0.95, "wealth": 900000000},
-                {"name": "Osaka", "hp": 0.70, "wealth": 50000000},
-                {"name": "Yubari", "hp": 0.15, "wealth": 1000}
-            ]
+            "running": True
         }
 
-        # --- Helper Functions ---
-        def log(msg, color=""):
-            log_area = js.document.getElementById("log-area")
-            span = f"<div class='log-entry {color}'>{msg}</div>"
-            log_area.innerHTML = span + log_area.innerHTML
+        # --- UI Generator ---
+        def init_ui():
+            container = js.document.getElementById("blocks-area")
+            container.innerHTML = ""
+            
+            for i, b in enumerate(blocks_data):
+                extra_class = "predator" if b["type"] == "predator" else ""
+                
+                html = f"""
+                <div class="block-card {extra_class}" id="card-{i}">
+                    <div class="block-name">{b['name']}</div>
+                    <div class="vitality-track">
+                        <div class="vitality-fill" id="fill-{i}" style="height: {int(b['hp']*100)}%; background-color: {b['color']};"></div>
+                    </div>
+                    <div class="block-stats" id="val-{i}">{int(b['hp']*100)}%</div>
+                </div>
+                """
+                container.innerHTML += html
 
-        def update_ui():
-            # Update Pool
+        def log(msg, color=""):
+            area = js.document.getElementById("log-area")
+            line = f"<div class='log-entry {color}'>{msg}</div>"
+            area.innerHTML = line + area.innerHTML
+
+        def update_visuals():
             js.document.getElementById("pool-val").innerText = f"Pool: ¥{int(state['pool']):,}"
             
-            # Update Blocks
-            for i, b in enumerate(state["blocks"]):
+            for i, b in enumerate(blocks_data):
                 fill = js.document.getElementById(f"fill-{i}")
-                stats = js.document.getElementById(f"stats-{i}")
-                card = js.document.getElementById(f"block-{i}")
+                val = js.document.getElementById(f"val-{i}")
+                card = js.document.getElementById(f"card-{i}")
                 
-                # HP Limit
-                if b['hp'] > 1.0: b['hp'] = 1.0
+                # HP cap check (Tokyo can go over 100%)
+                display_hp = b["hp"]
+                if display_hp < 0: display_hp = 0
                 
-                # Height
-                fill.style.height = f"{int(b['hp'] * 100)}%"
-                stats.innerText = f"HP: {int(b['hp'] * 100)}%"
+                # Height (Max 100% for CSS)
+                css_height = min(100, int(display_hp * 100))
+                fill.style.height = f"{css_height}%"
+                val.innerText = f"{int(display_hp * 100)}%"
                 
-                # Critical styling
-                if b['hp'] < 0.3:
+                # Color & Style Logic
+                if b["type"] == "predator":
+                    fill.style.backgroundColor = "#d600ff" # Toxic Purple
+                    if b["hp"] > 1.2: # Too fat
+                        card.style.borderColor = "#d600ff"
+                elif b["hp"] < 0.3:
+                    fill.style.backgroundColor = "#ff0000"
                     card.classList.add("critical")
                 else:
+                    fill.style.backgroundColor = "#4b91ff"
                     card.classList.remove("critical")
 
-        async def animate_flow(target_index):
-            # Create particle
-            particle = js.document.createElement("div")
-            particle.className = "flow-particle"
+        # --- Animation ---
+        async def particle_anim(from_id, to_id, color):
+            p = js.document.createElement("div")
+            p.className = "particle"
+            p.style.backgroundColor = color
+            p.style.boxShadow = f"0 0 10px {color}"
             
-            # Start position (HQ)
-            hq_rect = js.document.getElementById("heart-btn").getBoundingClientRect()
-            particle.style.top = f"{hq_rect.top + 20}px"
-            particle.style.left = f"{hq_rect.left + 20}px"
+            # Start Coord
+            if from_id == "heart":
+                start_el = js.document.getElementById("heart-btn")
+            else:
+                start_el = js.document.getElementById(f"card-{from_id}")
             
-            js.document.body.appendChild(particle)
+            if not start_el: return
+            s_rect = start_el.getBoundingClientRect()
             
-            # Wait a bit for DOM rendering
+            # Fixed coordinate correction
+            p.style.top = f"{s_rect.top + 20}px"
+            p.style.left = f"{s_rect.left + s_rect.width/2}px"
+            
+            js.document.body.appendChild(p)
             await asyncio.sleep(0.05)
             
-            # End position (Target Block)
-            target = js.document.getElementById(f"block-{target_index}")
-            target_rect = target.getBoundingClientRect()
+            # End Coord
+            if to_id == "heart":
+                end_el = js.document.getElementById("heart-btn")
+            else:
+                end_el = js.document.getElementById(f"card-{to_id}")
             
-            # Move
-            particle.style.top = f"{target_rect.top + 20}px"
-            particle.style.left = f"{target_rect.left + target_rect.width/2}px"
+            if not end_el: return
+            t_rect = end_el.getBoundingClientRect()
             
-            # Wait for animation to finish
-            await asyncio.sleep(1.0)
+            p.style.top = f"{t_rect.top + 20}px"
+            p.style.left = f"{t_rect.left + t_rect.width/2}px"
             
-            # Cleanup
-            particle.remove()
+            await asyncio.sleep(0.8)
+            p.remove()
 
-        # --- Core Logic ---
+        # --- The Straw Effect Loop (Reality) ---
+        async def straw_effect_loop():
+            while True:
+                if state["running"]:
+                    tokyo = blocks_data[0] # Predator
+                    
+                    # 地方から吸い上げる
+                    for i, b in enumerate(blocks_data):
+                        if b["type"] == "prey" and b["hp"] > 0:
+                            drain = 0.02
+                            b["hp"] -= drain
+                            
+                            # 50%は消え、50%は東京へ移転する (Leakage)
+                            tokyo["hp"] += drain * 0.5 
+                            
+                            # Visual: Purple Particle (Prey -> Tokyo)
+                            if random.random() > 0.6:
+                                asyncio.ensure_future(particle_anim(i, 0, "#d600ff"))
+                    
+                    # 自然減衰 (全体)
+                    for b in blocks_data:
+                        if b["hp"] > 0: b["hp"] -= 0.005
 
-        async def run_cycle(event):
-            # 1. Leviathan (Distortion)
-            target_idx = random.randint(0, 1) # 東京か大阪で予算発生
-            budget = 1000000000 # 10億
-            fair = 100000000    # 1億
-            
-            log(f"--- 予算執行: {state['blocks'][target_idx]['name']} (提示: ¥10億) ---")
-            
-            # 2. G-Cart (Optimization)
-            distortion = budget / fair
-            saved = 0
-            if distortion > 9.9:
-                log(f"🛡️ G-CART: 歪み {distortion:.1f} を検知! 9億円をカット。", "log-gold")
-                saved = budget - fair
-            
-            # 3. The Heart (Collection)
-            fee = saved * 0.3 # 30%プール
-            state["pool"] += fee
-            log(f"🫀 HQ: ¥{int(fee):,} をプールしました。")
-            
-            update_ui()
-            
-            # 4. Auto-Distribution (Systole) if critical exists
-            crit_idx = -1
-            min_hp = 1.0
-            for i, b in enumerate(state["blocks"]):
-                if b["hp"] < 0.3 and b["hp"] < min_hp:
-                    min_hp = b["hp"]
-                    crit_idx = i
-            
-            if crit_idx != -1 and state["pool"] > 0:
-                await manual_transfusion(crit_idx)
+                    update_visuals()
+                
+                await asyncio.sleep(1.0) # 1秒サイクル
 
-        async def manual_transfusion(block_idx):
-            # タップまたは自動実行で呼ばれる
-            if state["pool"] <= 0:
-                log("⚠️ プール残高がありません。G-Cartを回してください。")
-                return
+        # --- G-Cart Intervention (Solution) ---
+        async def trigger_gcart(event):
+            # 1. 徴収 (Taxing Tokyo)
+            tokyo = blocks_data[0]
+            tax_revenue = 0
+            
+            if tokyo["hp"] > 1.0:
+                surplus = tokyo["hp"] - 1.0
+                tax_revenue = 1000000000 + (surplus * 5000000000)
+                tokyo["hp"] = 1.0 # Reset to normal
+                
+                log(f"🛡️ G-Cart: 東京の肥大化を検知。富を再配分します。", "c-gold")
+                await particle_anim(0, "heart", "#ffd700") # Tokyo -> Heart
+            else:
+                tax_revenue = 500000000
+                log(f"🛡️ G-Cart: 通常徴収を実行。", "c-gold")
+                await particle_anim(0, "heart", "#ffd700")
 
-            block = state["blocks"][block_idx]
-            amount = state["pool"]
+            state["pool"] += tax_revenue
+            update_visuals()
+            await asyncio.sleep(0.5)
             
-            # Animation (Async wait)
-            await animate_flow(block_idx)
-            
-            log(f"💗 輸血実行: {block['name']} へ ¥{int(amount):,} (特別クエスト)", "log-red")
-            
-            # Logic
-            heal = 0.25
-            block["hp"] = min(1.0, block["hp"] + heal)
-            state["pool"] = 0
-            
-            # UI update
-            update_ui()
+            # 2. 輸血 (Transfusion to Dying Blocks)
+            if state["pool"] > 0:
+                # HP低い順
+                sorted_indices = sorted(range(len(blocks_data)), key=lambda k: blocks_data[k]["hp"])
+                
+                count = 0
+                for idx in sorted_indices:
+                    target = blocks_data[idx]
+                    if state["pool"] <= 0: break
+                    if target["type"] == "predator": continue
+                    if target["hp"] >= 0.9: continue
+                    
+                    # 救済額
+                    cost = 500000000
+                    if state["pool"] < cost: cost = state["pool"]
+                    
+                    state["pool"] -= cost
+                    target["hp"] += 0.25 # 回復
+                    
+                    await particle_anim("heart", idx, "#ff4b4b") # Heart -> Local
+                    log(f"💗 The Heart: {target['name']} を救済しました。", "c-red")
+                    
+                    update_visuals()
+                    count += 1
+                    await asyncio.sleep(0.2)
 
-        def reset_system(event):
-            state["pool"] = 0
-            state["blocks"][0]["hp"] = 0.95
-            state["blocks"][1]["hp"] = 0.70
-            state["blocks"][2]["hp"] = 0.15
-            update_ui()
-            log("System Reset.")
+        def toggle_decay(event):
+            state["running"] = not state["running"]
+
+        # --- Main ---
+        init_ui()
+        update_visuals()
+        asyncio.ensure_future(straw_effect_loop())
 
     </script>
 </body>
