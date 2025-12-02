@@ -115,7 +115,6 @@
             100% { transform: scale(1); }
         }
 
-        /* Flow Particle (輸血アニメーション) */
         .flow-particle {
             position: absolute;
             width: 10px;
@@ -160,7 +159,6 @@
 <body>
 
     <div class="container">
-        <!-- Header -->
         <h1>🫀 The Heart</h1>
         <div class="subtitle">"From Logic to the Heart."</div>
 
@@ -172,28 +170,19 @@
 
         <!-- Blocks Area -->
         <div class="blocks-container" id="blocks-area">
-            <!-- Block A -->
             <div class="block-card" id="block-0" py-click="manual_transfusion(0)">
                 <div class="block-name">Tokyo</div>
-                <div class="block-vitality-bar">
-                    <div class="vitality-fill" id="fill-0" style="height: 95%;"></div>
-                </div>
+                <div class="block-vitality-bar"><div class="vitality-fill" id="fill-0" style="height: 95%;"></div></div>
                 <div class="block-stats" id="stats-0">HP: 95%</div>
             </div>
-            <!-- Block B -->
             <div class="block-card" id="block-1" py-click="manual_transfusion(1)">
                 <div class="block-name">Osaka</div>
-                <div class="block-vitality-bar">
-                    <div class="vitality-fill" id="fill-1" style="height: 70%;"></div>
-                </div>
+                <div class="block-vitality-bar"><div class="vitality-fill" id="fill-1" style="height: 70%;"></div></div>
                 <div class="block-stats" id="stats-1">HP: 70%</div>
             </div>
-            <!-- Block C -->
             <div class="block-card critical" id="block-2" py-click="manual_transfusion(2)">
                 <div class="block-name">Yubari</div>
-                <div class="block-vitality-bar">
-                    <div class="vitality-fill" id="fill-2" style="height: 15%;"></div>
-                </div>
+                <div class="block-vitality-bar"><div class="vitality-fill" id="fill-2" style="height: 15%;"></div></div>
                 <div class="block-stats" id="stats-2">HP: 15%</div>
             </div>
         </div>
@@ -204,7 +193,6 @@
             <button class="btn" py-click="reset_system">Reset</button>
         </div>
 
-        <!-- Log -->
         <div id="log-area">System Ready... Tap specific block to inject funds manually.</div>
     </div>
 
@@ -213,7 +201,6 @@
         import js
         import random
         import asyncio
-        from pyodide.ffi import create_proxy
 
         # --- System State ---
         state = {
@@ -241,6 +228,9 @@
                 stats = js.document.getElementById(f"stats-{i}")
                 card = js.document.getElementById(f"block-{i}")
                 
+                # HP Limit
+                if b['hp'] > 1.0: b['hp'] = 1.0
+                
                 # Height
                 fill.style.height = f"{int(b['hp'] * 100)}%"
                 stats.innerText = f"HP: {int(b['hp'] * 100)}%"
@@ -251,7 +241,7 @@
                 else:
                     card.classList.remove("critical")
 
-        def animate_flow(target_index):
+        async def animate_flow(target_index):
             # Create particle
             particle = js.document.createElement("div")
             particle.className = "flow-particle"
@@ -263,25 +253,26 @@
             
             js.document.body.appendChild(particle)
             
+            # Wait a bit for DOM rendering
+            await asyncio.sleep(0.05)
+            
             # End position (Target Block)
             target = js.document.getElementById(f"block-{target_index}")
             target_rect = target.getBoundingClientRect()
             
-            # Trigger animation (Need slight delay for transition to work)
-            def move():
-                particle.style.top = f"{target_rect.top + 20}px"
-                particle.style.left = f"{target_rect.left + target_rect.width/2}px"
+            # Move
+            particle.style.top = f"{target_rect.top + 20}px"
+            particle.style.left = f"{target_rect.left + target_rect.width/2}px"
             
-            js.setTimeout(create_proxy(move), 50)
+            # Wait for animation to finish
+            await asyncio.sleep(1.0)
             
             # Cleanup
-            def remove():
-                particle.remove()
-            js.setTimeout(create_proxy(remove), 1000)
+            particle.remove()
 
         # --- Core Logic ---
 
-        def run_cycle(event):
+        async def run_cycle(event):
             # 1. Leviathan (Distortion)
             target_idx = random.randint(0, 1) # 東京か大阪で予算発生
             budget = 1000000000 # 10億
@@ -312,9 +303,9 @@
                     crit_idx = i
             
             if crit_idx != -1 and state["pool"] > 0:
-                manual_transfusion(crit_idx)
+                await manual_transfusion(crit_idx)
 
-        def manual_transfusion(block_idx):
+        async def manual_transfusion(block_idx):
             # タップまたは自動実行で呼ばれる
             if state["pool"] <= 0:
                 log("⚠️ プール残高がありません。G-Cartを回してください。")
@@ -323,8 +314,8 @@
             block = state["blocks"][block_idx]
             amount = state["pool"]
             
-            # Animation
-            animate_flow(block_idx)
+            # Animation (Async wait)
+            await animate_flow(block_idx)
             
             log(f"💗 輸血実行: {block['name']} へ ¥{int(amount):,} (特別クエスト)", "log-red")
             
@@ -333,10 +324,8 @@
             block["hp"] = min(1.0, block["hp"] + heal)
             state["pool"] = 0
             
-            # UI update delay to match particle arrival
-            def delayed_update():
-                update_ui()
-            js.setTimeout(create_proxy(delayed_update), 1000)
+            # UI update
+            update_ui()
 
         def reset_system(event):
             state["pool"] = 0
