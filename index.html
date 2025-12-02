@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Heart | Global Liquidity Protocol</title>
-    <!-- PyScriptの読み込み -->
-    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
-    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+
     <style>
         body {
             background-color: #0e1117;
@@ -16,22 +17,23 @@
             max-width: 800px;
             margin: 0 auto;
         }
-        h1 { color: #ff4b4b; text-align: center; }
-        .subtitle { text-align: center; color: #8b949e; margin-bottom: 30px; }
-        #output {
+        h1 { color: #ff4b4b; text-align: center; margin-bottom: 5px;}
+        .subtitle { text-align: center; color: #8b949e; margin-bottom: 30px; font-size: 0.9em;}
+        #terminal {
             background-color: #161b22;
             border: 1px solid #30363d;
             border-radius: 6px;
             padding: 20px;
-            white-space: pre-wrap; /* 改行を維持 */
-            font-size: 14px;
-            line-height: 1.5;
+            white-space: pre-wrap;
+            font-size: 13px;
+            line-height: 1.6;
+            min-height: 300px;
             box-shadow: 0 0 20px rgba(255, 75, 75, 0.1);
+            overflow-y: auto;
         }
+        .btn-container { text-align: center; margin: 20px 0; }
         .btn {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
+            padding: 12px 24px;
             background: #ff4b4b;
             color: white;
             border: none;
@@ -39,6 +41,8 @@
             cursor: pointer;
             font-family: inherit;
             font-weight: bold;
+            font-size: 16px;
+            transition: background 0.3s;
         }
         .btn:hover { background: #ff3333; }
     </style>
@@ -48,125 +52,17 @@
     <h1>🫀 The Heart</h1>
     <div class="subtitle">"From Logic to the Heart."</div>
 
-    <!-- 実行ボタン -->
-    <button id="run-btn" class="btn" py-click="run_simulation()">Run Simulation</button>
+    <div class="btn-container">
+        <!-- heart.py の中の run_simulation 関数を呼ぶ -->
+        <button id="run-btn" class="btn" py-click="heart.run_simulation">Run Simulation</button>
+    </div>
 
-    <!-- 出力エリア -->
-    <div id="output">System Ready... Waiting for trigger.</div>
+    <div id="terminal">System Ready... Waiting for trigger.</div>
 
-    <!-- Pythonコード (ブラウザ内で実行される) -->
-    <py-script>
-        from dataclasses import dataclass
-        from typing import List, Tuple
-        import js
+    <!-- ここで heart.py を読み込む設定をする -->
+    <script type="py" config='{"files": {"./heart.py": "./heart.py"}}'>
+        import heart
+    </script>
 
-        # --- System Constants ---
-        THRESHOLD_DISTORTION = 10.0
-        PROTOCOL_FEE_RATE = 0.1
-
-        # 出力用ヘルパー関数
-        def log(text):
-            output_div = js.document.getElementById("output")
-            # 既存のテキストに追記するか、上書きするか
-            if "System Ready" in output_div.innerText:
-                output_div.innerText = text + "\n"
-            else:
-                output_div.innerText += text + "\n"
-
-        def clear_log():
-            js.document.getElementById("output").innerText = ""
-
-        @dataclass
-        class StandardBlock:
-            id: str
-            name: str
-            population: int
-            wealth: float
-            vitality: float
-            
-            def is_critical(self) -> bool:
-                return self.vitality < 0.3 or self.wealth < 10000
-
-            def receive_transfusion(self, amount: float):
-                log(f"  [💗 THE HEART] 輸血を実行 -> Target: {self.name}")
-                log(f"    -> 特別クエスト発注: 予算 ¥{amount:,.0f}")
-                
-                healing = (amount / 100000000) * 0.1 
-                old_vitality = self.vitality
-                self.vitality = min(1.0, self.vitality + healing)
-                self.wealth += amount
-                
-                log(f"    -> バイタル回復: {old_vitality:.2f} => {self.vitality:.2f}")
-                log(f"    -> 地域富の増加: ¥{self.wealth:,.0f}")
-
-        class Leviathan:
-            def attempt_spending(self, target_block: StandardBlock) -> Tuple[float, float]:
-                fair_value = 100000000.0
-                bloated_budget = 1000000000.0
-                return bloated_budget, fair_value
-
-        class GCartValve:
-            def check_and_regulate(self, budget: float, fair_value: float, block: StandardBlock) -> Tuple[float, float]:
-                distortion = budget / fair_value
-                if distortion > THRESHOLD_DISTORTION:
-                    log(f"  [🛡️ G-CART] 異常検知: 歪み指数 {distortion:.1f} (Block: {block.name})")
-                    log(f"    -> 遮断弁閉鎖。適正価格 ¥{fair_value:,.0f} に強制修正。")
-                    return fair_value, (budget - fair_value)
-                return budget, 0.0
-
-        class TheHeart:
-            def __init__(self):
-                self.arterial_pool = 0.0
-
-            def diastole(self, saved_wealth: float):
-                flow = saved_wealth * PROTOCOL_FEE_RATE
-                self.arterial_pool += flow
-                log(f"  [🫀 DIASTOLE] 循環プール還流: +¥{flow:,.0f} (Total: ¥{self.arterial_pool:,.0f})")
-
-            def systole(self, blocks: List[StandardBlock]):
-                if self.arterial_pool <= 0:
-                    return
-                critical_blocks = [b for b in blocks if b.is_critical()]
-                if critical_blocks:
-                    target = min(critical_blocks, key=lambda b: b.vitality)
-                    injection_amount = self.arterial_pool
-                    target.receive_transfusion(injection_amount)
-                    self.arterial_pool = 0.0
-                else:
-                    log("  [🫀 SYSTOLE] 全ブロックの健常性を確認。エネルギーを温存します。")
-
-        def run_simulation(*args):
-            clear_log()
-            log("==================================================")
-            log("   SYSTEM BOOT: The Heart (Global Liquidity Protocol)")
-            log("==================================================\n")
-            
-            world_blocks = [
-                StandardBlock("A", "Tokyo-Minato", 200000, 999999999, 0.95),
-                StandardBlock("B", "Osaka-Kita",   150000, 50000000, 0.70),
-                StandardBlock("C", "Yubari-Like",  6000,   1000,     0.15)
-            ]
-            
-            leviathan = Leviathan()
-            valve = GCartValve()
-            heart = TheHeart()
-            
-            log("--- Phase 1: Distortion & Regulation ---")
-            target_block = world_blocks[0]
-            
-            budget, fair = leviathan.attempt_spending(target_block)
-            log(f"Target: {target_block.name} | 行政提示額: ¥{budget:,.0f}")
-            
-            paid, saved = valve.check_and_regulate(budget, fair, target_block)
-            log(f"-> 執行額: ¥{paid:,.0f} | 浮いた税金(Surplus): ¥{saved:,.0f}")
-            
-            log("\n--- Phase 2: The Heartbeat ---")
-            heart.diastole(saved)
-            heart.systole(world_blocks)
-            
-            log("\n==================================================")
-            log("   SYSTEM STATUS: Stable. Circulation Optimized.")
-            log("==================================================")
-    </py-script>
 </body>
-                </html>
+</html>
