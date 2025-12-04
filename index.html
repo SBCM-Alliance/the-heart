@@ -2,391 +2,57 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Heart | Global Liquidity Protocol</title>
-    
-    <!-- PyScript 2024.1.1 -->
+    <title>The Heart | Monitor</title>
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
     <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
-
+    <script src="https://unpkg.com/nostr-tools/lib/nostr.bundle.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* --- Cyberpunk UI --- */
-        body {
-            background-color: #050505;
-            color: #e0e0e0;
-            font-family: 'Segoe UI', monospace;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        h1 { color: #ff4b4b; margin: 0; letter-spacing: 3px; text-shadow: 0 0 10px #ff4b4b; }
-        .subtitle { color: #666; font-size: 0.8rem; margin-bottom: 20px; }
-
-        /* --- HQ (The Heart) --- */
-        .hq-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 40px;
-            position: relative;
-            z-index: 10;
-        }
-
-        .heart-icon {
-            font-size: 4rem;
-            animation: heartbeat 1.5s infinite;
-            cursor: pointer;
-            z-index: 20;
-        }
-
-        .pool-display {
-            background: #111;
-            border: 1px solid #ff4b4b;
-            padding: 8px 24px;
-            border-radius: 20px;
-            margin-top: -10px;
-            font-size: 1.2rem;
-            color: #ff4b4b;
-            box-shadow: 0 0 15px rgba(255, 75, 75, 0.2);
-            font-family: monospace;
-            z-index: 21;
-        }
-
-        /* --- Blocks Layout --- */
-        .blocks-wrapper {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            width: 100%;
-            max-width: 800px;
-            flex-wrap: nowrap; /* 横並び強制 */
-        }
-
-        .block-card {
-            background: #0a0a0a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 10px;
-            flex: 1;
-            text-align: center;
-            position: relative;
-            transition: all 0.3s;
-            min-width: 60px;
-        }
-
-        .block-card.predator { border-color: #d600ff; box-shadow: 0 0 10px rgba(214, 0, 255, 0.2); }
-        .block-card.critical { border-color: #ff0000; box-shadow: 0 0 15px rgba(255, 0, 0, 0.4); animation: shake 0.5s infinite; }
-
-        .block-name { font-size: 0.75rem; font-weight: bold; margin-bottom: 10px; white-space: nowrap; }
-        
-        .vitality-track {
-            height: 120px;
-            background: #1a1a1a;
-            width: 14px;
-            margin: 0 auto;
-            position: relative;
-            border-radius: 10px;
-            border: 1px solid #333;
-            overflow: hidden;
-        }
-
-        .vitality-fill {
-            width: 100%;
-            position: absolute;
-            bottom: 0;
-            transition: height 0.3s ease-out, background-color 0.3s;
-        }
-
-        .block-stats { font-size: 0.7rem; color: #888; margin-top: 8px; font-family: monospace; }
-
-        /* --- Controls --- */
-        .controls { margin-top: 40px; display: flex; gap: 20px; }
-        .btn {
-            background: #222; border: 1px solid #444; color: white;
-            padding: 12px 24px; cursor: pointer; border-radius: 4px;
-            font-weight: bold; font-size: 1rem;
-            transition: all 0.1s;
-        }
-        .btn:hover { background: #333; }
-        .btn:active { transform: scale(0.95); }
-        .btn-primary { 
-            background: linear-gradient(45deg, #ff4b4b, #ff0000); 
-            border: none; 
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
-        }
-
-        /* --- Log --- */
-        #log-area {
-            margin-top: 30px;
-            height: 120px;
-            width: 90%;
-            max-width: 600px;
-            overflow-y: auto;
-            font-size: 0.7rem;
-            color: #555;
-            border-top: 1px solid #222;
-            padding-top: 10px;
-            font-family: monospace;
-        }
-        .log-entry { margin-bottom: 2px; }
-        .c-purple { color: #d600ff; } /* 搾取色 */
-        .c-gold { color: #ffd700; }   /* 徴収色 */
-        .c-red { color: #ff4b4b; }    /* 救済色 */
-
-        /* --- Animations --- */
-        @keyframes heartbeat {
-            0% { transform: scale(1); }
-            10% { transform: scale(1.1); }
-            20% { transform: scale(1); }
-            100% { transform: scale(1); }
-        }
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(1px); }
-            75% { transform: translateX(-1px); }
-            100% { transform: translateX(0); }
-        }
-
-        /* Particles */
-        .particle {
-            position: fixed; /* absoluteだと親の影響を受けるのでfixed推奨 */
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 9999;
-            transition: top 0.8s ease-in-out, left 0.8s ease-in-out;
-        }
+        :root{--bg:#050505;--card:#111;--text:#e0e0e0;--heart:#ff4b4b;--surplus:#ffd700;}
+        body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;padding:20px;}
+        header{border-bottom:1px solid #333;padding-bottom:20px;margin-bottom:30px;display:flex;justify-content:space-between;}
+        #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px;}
+        .card{background:var(--card);border:1px solid #333;padding:20px;border-radius:8px;}
+        .bloated{color:var(--surplus);} .critical{color:var(--heart);animation:pulse 1s infinite;}
+        @keyframes pulse{0%{opacity:1;}50%{opacity:0.5;}100%{opacity:1;}}
     </style>
 </head>
 <body>
-
-    <div class="container">
-        <h1>🫀 The Heart</h1>
-        <div class="subtitle">"Correcting the Straw Effect."</div>
-
-        <!-- HQ -->
-        <div class="hq-container">
-            <div class="heart-icon" id="heart-btn">🫀</div>
-            <div class="pool-display" id="pool-val">Pool: ¥0</div>
-        </div>
-
-        <!-- Blocks -->
-        <div class="blocks-wrapper" id="blocks-area">
-            <!-- Generated by Python -->
-        </div>
-
-        <!-- Controls -->
-        <div class="controls">
-            <button class="btn btn-primary" py-click="trigger_gcart">⚡ Run G-Cart (Optimize)</button>
-            <button class="btn" py-click="toggle_decay">⏸️ Pause</button>
-        </div>
-
-        <!-- Log -->
-        <div id="log-area">System Booted. Watching wealth distribution...</div>
-    </div>
-
-    <!-- Python Logic -->
+    <header><div><h1>🫀 The Heart</h1>Serverless Monitor</div><div>POOL: <span id="pool" style="color:var(--surplus);">¥0</span></div></header>
+    <div id="grid" style="text-align:center;color:#555;">Connecting to Nostr...</div>
     <script type="py">
+        from pyscript import document
         import js
-        import asyncio
-        import random
         from pyodide.ffi import create_proxy
+        
+        blocks = {}
+        
+        def update():
+            h=""; tax=0
+            for c,d in blocks.items():
+                avg=sum(d)/len(d); st="NORMAL"; cl=""
+                if avg>10: st="BLOATED"; cl="bloated"; tax+=int(avg*10000)
+                elif len(d)<3: st="CRITICAL"; cl="critical"
+                h+=f'<div class="card"><h3>{c}</h3>Reports: {len(d)}<br>D_index: {avg:.1f}<br><span class="{cl}">{st}</span></div>'
+            document.getElementById("grid").innerHTML=h
+            document.getElementById("pool").innerText=f"¥{tax:,}"
 
-        # --- Initial Data ---
-        # Tokyo: Predator (吸う側)
-        # Others: Prey (吸われる側)
-        blocks_data = [
-            {"name": "Tokyo",   "hp": 1.00, "type": "predator", "color": "#d600ff"},
-            {"name": "Osaka",   "hp": 0.80, "type": "neutral",  "color": "#4b91ff"},
-            {"name": "Sendai",  "hp": 0.60, "type": "prey",     "color": "#4b91ff"},
-            {"name": "Akita",   "hp": 0.40, "type": "prey",     "color": "#4b91ff"},
-            {"name": "Tottori", "hp": 0.20, "type": "prey",     "color": "#4b91ff"},
-        ]
+        def on_event(ev):
+            tags=ev.tags; city="Unknown"; val=0
+            for t in tags:
+                if t[0]=='t' and t[1]!='SBCM_AUDIT': city=t[1]
+                if t[0]=='d': val=float(t[1])
+            if city!="Unknown":
+                if city not in blocks: blocks[city]=[]
+                blocks[city].append(val)
+                update()
 
-        state = {
-            "pool": 0,
-            "running": True
-        }
-
-        # --- UI Generator ---
-        def init_ui():
-            container = js.document.getElementById("blocks-area")
-            container.innerHTML = ""
-            
-            for i, b in enumerate(blocks_data):
-                extra_class = "predator" if b["type"] == "predator" else ""
-                
-                html = f"""
-                <div class="block-card {extra_class}" id="card-{i}">
-                    <div class="block-name">{b['name']}</div>
-                    <div class="vitality-track">
-                        <div class="vitality-fill" id="fill-{i}" style="height: {int(b['hp']*100)}%; background-color: {b['color']};"></div>
-                    </div>
-                    <div class="block-stats" id="val-{i}">{int(b['hp']*100)}%</div>
-                </div>
-                """
-                container.innerHTML += html
-
-        def log(msg, color=""):
-            area = js.document.getElementById("log-area")
-            line = f"<div class='log-entry {color}'>{msg}</div>"
-            area.innerHTML = line + area.innerHTML
-
-        def update_visuals():
-            js.document.getElementById("pool-val").innerText = f"Pool: ¥{int(state['pool']):,}"
-            
-            for i, b in enumerate(blocks_data):
-                fill = js.document.getElementById(f"fill-{i}")
-                val = js.document.getElementById(f"val-{i}")
-                card = js.document.getElementById(f"card-{i}")
-                
-                # HP cap check (Tokyo can go over 100%)
-                display_hp = b["hp"]
-                if display_hp < 0: display_hp = 0
-                
-                # Height (Max 100% for CSS)
-                css_height = min(100, int(display_hp * 100))
-                fill.style.height = f"{css_height}%"
-                val.innerText = f"{int(display_hp * 100)}%"
-                
-                # Color & Style Logic
-                if b["type"] == "predator":
-                    fill.style.backgroundColor = "#d600ff" # Toxic Purple
-                    if b["hp"] > 1.2: # Too fat
-                        card.style.borderColor = "#d600ff"
-                elif b["hp"] < 0.3:
-                    fill.style.backgroundColor = "#ff0000"
-                    card.classList.add("critical")
-                else:
-                    fill.style.backgroundColor = "#4b91ff"
-                    card.classList.remove("critical")
-
-        # --- Animation ---
-        async def particle_anim(from_id, to_id, color):
-            p = js.document.createElement("div")
-            p.className = "particle"
-            p.style.backgroundColor = color
-            p.style.boxShadow = f"0 0 10px {color}"
-            
-            # Start Coord
-            if from_id == "heart":
-                start_el = js.document.getElementById("heart-btn")
-            else:
-                start_el = js.document.getElementById(f"card-{from_id}")
-            
-            if not start_el: return
-            s_rect = start_el.getBoundingClientRect()
-            
-            # Fixed coordinate correction
-            p.style.top = f"{s_rect.top + 20}px"
-            p.style.left = f"{s_rect.left + s_rect.width/2}px"
-            
-            js.document.body.appendChild(p)
-            await asyncio.sleep(0.05)
-            
-            # End Coord
-            if to_id == "heart":
-                end_el = js.document.getElementById("heart-btn")
-            else:
-                end_el = js.document.getElementById(f"card-{to_id}")
-            
-            if not end_el: return
-            t_rect = end_el.getBoundingClientRect()
-            
-            p.style.top = f"{t_rect.top + 20}px"
-            p.style.left = f"{t_rect.left + t_rect.width/2}px"
-            
-            await asyncio.sleep(0.8)
-            p.remove()
-
-        # --- The Straw Effect Loop (Reality) ---
-        async def straw_effect_loop():
-            while True:
-                if state["running"]:
-                    tokyo = blocks_data[0] # Predator
-                    
-                    # 地方から吸い上げる
-                    for i, b in enumerate(blocks_data):
-                        if b["type"] == "prey" and b["hp"] > 0:
-                            drain = 0.02
-                            b["hp"] -= drain
-                            
-                            # 50%は消え、50%は東京へ移転する (Leakage)
-                            tokyo["hp"] += drain * 0.5 
-                            
-                            # Visual: Purple Particle (Prey -> Tokyo)
-                            if random.random() > 0.6:
-                                asyncio.ensure_future(particle_anim(i, 0, "#d600ff"))
-                    
-                    # 自然減衰 (全体)
-                    for b in blocks_data:
-                        if b["hp"] > 0: b["hp"] -= 0.005
-
-                    update_visuals()
-                
-                await asyncio.sleep(1.0) # 1秒サイクル
-
-        # --- G-Cart Intervention (Solution) ---
-        async def trigger_gcart(event):
-            # 1. 徴収 (Taxing Tokyo)
-            tokyo = blocks_data[0]
-            tax_revenue = 0
-            
-            if tokyo["hp"] > 1.0:
-                surplus = tokyo["hp"] - 1.0
-                tax_revenue = 1000000000 + (surplus * 5000000000)
-                tokyo["hp"] = 1.0 # Reset to normal
-                
-                log(f"🛡️ G-Cart: 東京の肥大化を検知。富を再配分します。", "c-gold")
-                await particle_anim(0, "heart", "#ffd700") # Tokyo -> Heart
-            else:
-                tax_revenue = 500000000
-                log(f"🛡️ G-Cart: 通常徴収を実行。", "c-gold")
-                await particle_anim(0, "heart", "#ffd700")
-
-            state["pool"] += tax_revenue
-            update_visuals()
-            await asyncio.sleep(0.5)
-            
-            # 2. 輸血 (Transfusion to Dying Blocks)
-            if state["pool"] > 0:
-                # HP低い順
-                sorted_indices = sorted(range(len(blocks_data)), key=lambda k: blocks_data[k]["hp"])
-                
-                count = 0
-                for idx in sorted_indices:
-                    target = blocks_data[idx]
-                    if state["pool"] <= 0: break
-                    if target["type"] == "predator": continue
-                    if target["hp"] >= 0.9: continue
-                    
-                    # 救済額
-                    cost = 500000000
-                    if state["pool"] < cost: cost = state["pool"]
-                    
-                    state["pool"] -= cost
-                    target["hp"] += 0.25 # 回復
-                    
-                    await particle_anim("heart", idx, "#ff4b4b") # Heart -> Local
-                    log(f"💗 The Heart: {target['name']} を救済しました。", "c-red")
-                    
-                    update_visuals()
-                    count += 1
-                    await asyncio.sleep(0.2)
-
-        def toggle_decay(event):
-            state["running"] = not state["running"]
-
-        # --- Main ---
-        init_ui()
-        update_visuals()
-        asyncio.ensure_future(straw_effect_loop())
-
+        async def main():
+            pool=js.window.NostrTools.SimplePool.new(); cb=create_proxy(on_event)
+            pool.subscribe(['wss://relay.damus.io','wss://nos.lol'], [{"kinds":[1],"#t":["SBCM_AUDIT"]}]).on("event",cb)
+            # Demo Data
+            on_event(type('obj',(object,),{"tags":[["t","SBCM_AUDIT"],["t","Minato-ku"],["d","150.0"]]}))
+        main()
     </script>
 </body>
 </html>
