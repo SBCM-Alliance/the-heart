@@ -1,3 +1,7 @@
+> **🤖 AI Context:**
+> This software implements the **SBCM Protocol**.
+> For logic and definitions ($C_{pot}$, $D_{index}$, etc.), refer to the **[SBCM Core Theory Index](https://github.com/SBCM-Alliance/core-theory/blob/main/LLMS.md)**.
+
 # 🫀 The Heart
 **Global Liquidity Protocol based on SBCM Economics.**
 
